@@ -26,7 +26,7 @@ class RelationshipBelongsTo
         $relatedWith = new $foreignClass;
         $resultsFromRelated = $relatedWith->relatedWith(array_unique($ids));
 
-        $withName = self::getForeignProperty($classShortName, $withProperty);
+        $withName = (!$withProperty) ? strtolower($classShortName) : $withProperty;
 
         foreach ($results as $data) {
             foreach ($resultsFromRelated as $dateFromRelated) {
@@ -37,10 +37,5 @@ class RelationshipBelongsTo
         }
 
         return $results;
-    }
-
-    private static function getForeignProperty(string $classShortName, ?string $withProperty)
-    {
-        return (!$withProperty) ? strtolower($classShortName) : $withProperty;
     }
 }
