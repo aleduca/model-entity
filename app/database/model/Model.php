@@ -4,6 +4,7 @@ namespace app\database\model;
 
 use app\database\Connection;
 use app\database\entity\Entity;
+use app\database\interfaces\RelationshipInterface;
 use app\database\library\Helpers;
 use app\database\relations\RelationshipBelongsTo;
 use Exception;
@@ -54,19 +55,41 @@ abstract class Model
         }
     }
 
-    public function belongsTo(string $model, ?string $property = null)
+    public function relation(string $class, string $relation, ?string $property)
     {
-        return RelationshipBelongsTo::createWith(
+        if (!class_exists($class)) {
+            throw new Exception("Model {$class} does not exist");
+        }
+
+        if (!class_exists($relation)) {
+            throw new Exception("Relation {$relation} does not exist");
+        }
+
+        $classRelation = new $relation;
+        if (!$classRelation instanceof RelationshipInterface) {
+            throw new Exception("Class {$relation} is not type of RelationshipInterface");
+        }
+
+        return $classRelation->createWith(
             static::class,
-            $model,
+            $class,
             $property
         );
     }
 
-    public function relatedWith(array $ids)
+    // public function belongsTo(string $model, ?string $property = null)
+    // {
+    //     return RelationshipBelongsTo::createWith(
+    //         static::class,
+    //         $model,
+    //         $property
+    //     );
+    // }
+
+    public function relatedWith(array $ids, string $field = 'id')
     {
         $connection = Connection::getConnection();
-        $query = "select * from {$this->table} where id in (" . implode(',', $ids) . ')';
+        $query = "select * from {$this->table} where {$field} in (" . implode(',', $ids) . ')';
         $stmt = $connection->query($query);
 
         return $stmt->fetchAll(PDO::FETCH_CLASS, $this->getEntity());

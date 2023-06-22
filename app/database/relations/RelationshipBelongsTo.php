@@ -2,12 +2,13 @@
 
 namespace app\database\relations;
 
+use app\database\interfaces\RelationshipInterface;
 use app\database\library\Helpers;
 use Exception;
 
-class RelationshipBelongsTo
+class RelationshipBelongsTo implements RelationshipInterface
 {
-    public static function createWith(string $class, string $foreignClass, ?string $withProperty)
+    public function createWith(string $class, string $foreignClass, ?string $withProperty)
     {
         if (!class_exists($foreignClass)) {
             throw new Exception("Model {$foreignClass} does not exist");
