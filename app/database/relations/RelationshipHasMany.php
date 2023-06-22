@@ -42,7 +42,5 @@ class RelationshipHasMany implements RelationshipInterface
         }
 
         return $results;
-
-        var_dump($ids);
     }
 }
