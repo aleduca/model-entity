@@ -4,18 +4,18 @@ namespace app\database\relations;
 
 use app\database\interfaces\RelationshipInterface;
 use app\database\library\Helpers;
+use app\database\model\Model;
 use Exception;
 
 class RelationshipHasMany implements RelationshipInterface
 {
-    public function createWith(string $class, string $foreignClass, ?string $withProperty)
+    public function createWith(Model $class, string $foreignClass, ?string $withProperty):object
     {
         if (!class_exists($foreignClass)) {
             throw new Exception("Model {$foreignClass} does not exist");
         }
 
-        $modelClass = new $class;
-        $results = $modelClass->all();
+        $results = $class->all();
 
         $classShortName = Helpers::getClassShortName($class);
         $classNameWithIdSuffix = strtolower($classShortName) . '_id';
@@ -27,7 +27,7 @@ class RelationshipHasMany implements RelationshipInterface
         $relatedWith = new $foreignClass;
         $resultsFromRelated = $relatedWith->relatedWith(array_unique($ids), $classNameWithIdSuffix);
 
-        $withName = (!$withProperty) ? strtolower($classShortName) : $withProperty;
+        // $withName = (!$withProperty) ? strtolower($classShortName) : $withProperty;
 
         foreach ($results as $data) {
             // $data->$withName = [];
@@ -38,9 +38,12 @@ class RelationshipHasMany implements RelationshipInterface
                     // $data->$withName[] = $dataFromRelated;
                 }
             }
-            $data->$withName = $arrayOfData;
+            $data->$withProperty = $arrayOfData;
         }
 
-        return $results;
+        return (object)[
+            'items' => $results,
+            'withName' => $withProperty,
+        ];
     }
 }

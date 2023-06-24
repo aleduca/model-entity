@@ -55,7 +55,7 @@ abstract class Model
         }
     }
 
-    public function relation(string $class, string $relation, ?string $property)
+    private function relation(string $class, string $relation, ?string $property)
     {
         if (!class_exists($class)) {
             throw new Exception("Model {$class} does not exist");
@@ -71,10 +71,47 @@ abstract class Model
         }
 
         return $classRelation->createWith(
-            static::class,
+            $this,
             $class,
             $property
         );
+    }
+
+    public function makeRelationsWith(...$relations)
+    {
+        $relationsCreated = [];
+        foreach ($relations as $relationArray) {
+            if (count($relationArray) !== 3) {
+                throw new Exception('To make relations, yout need to give exactly 3 parameters to relations methods');
+            }
+            [$class,$relation,$property] = $relationArray;
+
+            $relationsCreated[] = $this->relation($class, $relation, $property);
+        }
+
+        if (count($relationsCreated) == 1) {
+            return $relationsCreated[0]->items;
+        }
+
+        return $this->makeManyRelationsWith(...$relationsCreated);
+    }
+
+
+    private function makeManyRelationsWith(...$relations)
+    {
+        $relation1 = $relations[0];
+        unset($relations[0]);
+
+        foreach ($relations as $value) {
+            $withName = $value->withName;
+            foreach ($value->items as $key => $object) {
+                if (!property_exists($relation1->items[$key], $withName)) {
+                    $relation1->items[$key]->$withName = $object->$withName;
+                }
+            }
+        }
+
+        return $relation1->items;
     }
 
     // public function belongsTo(string $model, ?string $property = null)

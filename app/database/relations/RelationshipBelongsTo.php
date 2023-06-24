@@ -4,18 +4,18 @@ namespace app\database\relations;
 
 use app\database\interfaces\RelationshipInterface;
 use app\database\library\Helpers;
+use app\database\model\Model;
 use Exception;
 
 class RelationshipBelongsTo implements RelationshipInterface
 {
-    public function createWith(string $class, string $foreignClass, ?string $withProperty)
+    public function createWith(Model $class, string $foreignClass, ?string $withProperty):object
     {
         if (!class_exists($foreignClass)) {
             throw new Exception("Model {$foreignClass} does not exist");
         }
 
-        $modelClass = new $class;
-        $results = $modelClass->all();
+        $results = $class->all();
 
         $classShortName = Helpers::getClassShortName($foreignClass);
         $foreignKey = strtolower($classShortName) . '_id';
@@ -27,16 +27,18 @@ class RelationshipBelongsTo implements RelationshipInterface
         $relatedWith = new $foreignClass;
         $resultsFromRelated = $relatedWith->relatedWith(array_unique($ids));
 
-        $withName = (!$withProperty) ? strtolower($classShortName) : $withProperty;
 
         foreach ($results as $data) {
             foreach ($resultsFromRelated as $dateFromRelated) {
                 if ($data->$foreignKey === $dateFromRelated->id) {
-                    $data->$withName = $dateFromRelated;
+                    $data->$withProperty = $dateFromRelated;
                 }
             }
         }
 
-        return $results;
+        return (object)[
+            'items' => $results,
+            'withName' => $withProperty,
+        ];
     }
 }
