@@ -33,6 +33,8 @@ abstract class Model
             $query = "select {$fields} from {$this->table}";
             $stmt = $connection->query($query);
 
+            var_dump('all executed');
+
             return $stmt->fetchAll(PDO::FETCH_CLASS, $this->getEntity());
         } catch (\PDOException $th) {
             var_dump($th->getMessage());
@@ -55,7 +57,7 @@ abstract class Model
         }
     }
 
-    private function relation(string $class, string $relation, ?string $property)
+    private function relation(string $class, string $relation, string $property, array $results)
     {
         if (!class_exists($class)) {
             throw new Exception("Model {$class} does not exist");
@@ -71,22 +73,24 @@ abstract class Model
         }
 
         return $classRelation->createWith(
-            $this,
+            static::class,
             $class,
-            $property
+            $property,
+            $results
         );
     }
 
     public function makeRelationsWith(...$relations)
     {
         $relationsCreated = [];
+        $results = $this->all();
         foreach ($relations as $relationArray) {
             if (count($relationArray) !== 3) {
                 throw new Exception('To make relations, yout need to give exactly 3 parameters to relations methods');
             }
             [$class,$relation,$property] = $relationArray;
 
-            $relationsCreated[] = $this->relation($class, $relation, $property);
+            $relationsCreated[] = $this->relation($class, $relation, $property, $results);
         }
 
         if (count($relationsCreated) == 1) {
@@ -128,6 +132,8 @@ abstract class Model
         $connection = Connection::getConnection();
         $query = "select * from {$this->table} where {$field} in (" . implode(',', $ids) . ')';
         $stmt = $connection->query($query);
+
+        var_dump('related with executed');
 
         return $stmt->fetchAll(PDO::FETCH_CLASS, $this->getEntity());
     }

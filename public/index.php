@@ -13,7 +13,7 @@ $post = new Post;
 $posts = $post->makeRelationsWith(
     [User::class, RelationshipBelongsTo::class, 'author'],
     [Comment::class, RelationshipHasMany::class, 'comments'],
-    [Category::class, RelationshipBelongsTo::class, 'category']
+    // [Category::class, RelationshipBelongsTo::class, 'category']
 );
 // $posts = $post->relation(User::class, RelationshipBelongsTo::class, 'author');
 // $posts = $post->relation(Comment::class, RelationshipHasMany::class, 'comments');

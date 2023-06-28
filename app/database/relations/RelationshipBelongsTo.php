@@ -4,18 +4,15 @@ namespace app\database\relations;
 
 use app\database\interfaces\RelationshipInterface;
 use app\database\library\Helpers;
-use app\database\model\Model;
 use Exception;
 
 class RelationshipBelongsTo implements RelationshipInterface
 {
-    public function createWith(Model $class, string $foreignClass, ?string $withProperty):object
+    public function createWith(string $class, string $foreignClass, string $withProperty, array $results):object
     {
         if (!class_exists($foreignClass)) {
             throw new Exception("Model {$foreignClass} does not exist");
         }
-
-        $results = $class->all();
 
         $classShortName = Helpers::getClassShortName($foreignClass);
         $foreignKey = strtolower($classShortName) . '_id';

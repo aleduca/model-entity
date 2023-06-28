@@ -2,9 +2,7 @@
 
 namespace app\database\interfaces;
 
-use app\database\model\Model;
-
 interface RelationshipInterface
 {
-    public function createWith(Model $class, string $foreignClass, ?string $withProperty):object;
+    public function createWith(string $class, string $foreignClass, string $withProperty, array $results):object;
 }
