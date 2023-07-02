@@ -67,7 +67,7 @@ class Query
 
     public function crateQuery(bool $transform = true)
     {
-        $select = $this->transform('select', $transform);
+        $select = $this->transform('select', $transform) ?? '*';
         $where = $this->transform('where', $transform);
         $order = $this->transform('order', $transform);
         $limit = $this->transform('limit', $transform);
