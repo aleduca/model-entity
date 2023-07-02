@@ -6,6 +6,7 @@ use app\database\Connection;
 use app\database\entity\Entity;
 use app\database\interfaces\RelationshipInterface;
 use app\database\library\Helpers;
+use app\database\library\Query;
 use app\database\relations\RelationshipBelongsTo;
 use Exception;
 use PDO;
@@ -13,6 +14,7 @@ use PDO;
 abstract class Model
 {
     protected string $table;
+    protected ?Query $query = null;
 
     private function getEntity()
     {
@@ -26,19 +28,43 @@ abstract class Model
         return $entity;
     }
 
-    public function all(string $fields = '*')
+    public function all()
     {
         try {
             $connection = Connection::getConnection();
-            $query = "select {$fields} from {$this->table}";
-            $stmt = $connection->query($query);
+            [$select, $where,$order,$limit,$offset,$binds] = $this->query->crateQuery();
+            $query = "select {$select} from {$this->table}{$where}{$order}{$limit}{$offset}";
+            $prepare = $connection->prepare($query);
+            $prepare->execute($binds);
 
-            var_dump('all executed');
-
-            return $stmt->fetchAll(PDO::FETCH_CLASS, $this->getEntity());
+            return $prepare->fetchAll(PDO::FETCH_CLASS, $this->getEntity());
         } catch (\PDOException $th) {
             var_dump($th->getMessage());
         }
+    }
+
+    public function count(Query $query)
+    {
+        try {
+            $connection = Connection::getConnection();
+            [, $where,,,,$binds] = $query->crateQuery(false);
+            $query = "select count(*) as total from {$this->table}{$where}";
+            $prepare = $connection->prepare($query);
+            $prepare->execute($binds);
+
+            return $prepare->fetchObject($this->getEntity());
+        } catch (\PDOException $th) {
+            var_dump($th->getMessage());
+        }
+    }
+
+
+
+    public function execute(Query $query)
+    {
+        $this->query = $query;
+
+        return $this;
     }
 
     public function create(Entity $entity)

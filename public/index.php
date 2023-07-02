@@ -1,21 +1,31 @@
 <?php
 
-use app\database\model\Category;
+use app\database\library\Query;
 use app\database\model\Comment;
-use app\database\model\Post;
 use app\database\model\User;
 use app\database\relations\RelationshipBelongsTo;
 use app\database\relations\RelationshipHasMany;
 
 require '../vendor/autoload.php';
 
-$post = new Post;
-$posts = $post->makeRelationsWith(
-    [User::class, RelationshipBelongsTo::class, 'author'],
-    [Comment::class, RelationshipHasMany::class, 'comments'],
-    // [Category::class, RelationshipBelongsTo::class, 'category']
-);
-// $posts = $post->relation(User::class, RelationshipBelongsTo::class, 'author');
-// $posts = $post->relation(Comment::class, RelationshipHasMany::class, 'comments');
+// select id,slug,user_id,title where id > 40 and field operator value
 
-var_dump($posts);
+$query = new Query;
+$query->select('id,firstName,lastName,email')
+->limit(10)
+->order('id desc')
+->where('id', '>', 40)
+->paginate(User::class);
+
+// $posts = $query->modelInstance->execute($query)->makeRelationsWith(
+//     [User::class, RelationshipBelongsTo::class, 'author'],
+//     [Comment::class, RelationshipHasMany::class, 'comments'],
+// );
+
+$users = $query->modelInstance->execute($query)->makeRelationsWith(
+    [Comment::class, RelationshipHasMany::class, 'comments'],
+);
+
+
+var_dump($query->paginate->createLinks());
+var_dump($users);
