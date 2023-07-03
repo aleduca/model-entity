@@ -8,7 +8,7 @@ class Query
 {
     protected array $data;
     public ?Model $modelInstance = null;
-    public readonly Paginate $paginate;
+    public Paginate $paginate;
 
     public function select(array|string $select)
     {
@@ -65,27 +65,18 @@ class Query
         return $this;
     }
 
-    public function crateQuery(bool $transform = true)
+    public function crateQuery(array $transformsSelected)
     {
-        $select = $this->transform('select', $transform) ?? '*';
-        $where = $this->transform('where', $transform);
-        $order = $this->transform('order', $transform);
-        $limit = $this->transform('limit', $transform);
-        $offset = $this->transform('offset', $transform);
-        $binds = $this->transform('binds', $transform);
+        $transformed = [];
+        foreach ($transformsSelected as $transform) {
+            $transformed[$transform] = $this->transform($transform);
+        }
 
-        return [
-            $select,
-            $where,
-            $order,
-            $limit,
-            $offset,
-            $binds,
-        ];
+        return array_values($transformed);
     }
 
 
-    private function transform(string $field, bool $transform = true)
+    private function transform(string $field)
     {
         switch ($field) {
             case 'select':
@@ -101,26 +92,26 @@ class Query
 
                 break;
             case 'limit':
-                if (isset($this->data[$field]) && !$transform) {
+                if (isset($this->data[$field])) {
                     $this->data[$field] = ' limit ' . $this->data[$field];
                 }
 
                 break;
             case 'offset':
-                if (isset($this->data[$field]) && !$transform) {
+                if (isset($this->data[$field])) {
                     $this->data[$field] = ' offset ' . $this->data[$field];
                 }
 
                 break;
             case 'order':
-                if (isset($this->data[$field]) && !$transform) {
+                if (isset($this->data[$field])) {
                     $this->data[$field] = ' order by ' . $this->data[$field];
                 }
 
                 break;
 
             case 'binds':
-                if (!isset($this->data[$field]) && !$transform) {
+                if (!isset($this->data[$field])) {
                     $this->data[$field] = [];
                 }
 
@@ -134,6 +125,7 @@ class Query
     {
         return $this->data[$field] ?? null;
     }
+
 
     public function getData()
     {

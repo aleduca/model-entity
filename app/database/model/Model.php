@@ -32,7 +32,10 @@ abstract class Model
     {
         try {
             $connection = Connection::getConnection();
-            [$select, $where,$order,$limit,$offset,$binds] = $this->query->crateQuery();
+            [$select, $where,$order,$limit,$offset,$binds] = $this->query->crateQuery([
+                'select', 'where', 'order', 'limit', 'offset', 'binds',
+            ]);
+            $select = $select ?? '*';
             $query = "select {$select} from {$this->table}{$where}{$order}{$limit}{$offset}";
             $prepare = $connection->prepare($query);
             $prepare->execute($binds);
@@ -43,11 +46,12 @@ abstract class Model
         }
     }
 
+
     public function count(Query $query)
     {
         try {
             $connection = Connection::getConnection();
-            [, $where,,,,$binds] = $query->crateQuery(false);
+            [$where,$binds] = $query->crateQuery(['where', 'binds']);
             $query = "select count(*) as total from {$this->table}{$where}";
             $prepare = $connection->prepare($query);
             $prepare->execute($binds);
@@ -57,8 +61,6 @@ abstract class Model
             var_dump($th->getMessage());
         }
     }
-
-
 
     public function execute(Query $query)
     {
