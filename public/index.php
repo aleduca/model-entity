@@ -14,7 +14,6 @@ require '../vendor/autoload.php';
 
 $query = new Query;
 $query->select('id,firstName,lastName')
-->limit(10)
 ->where('id', '=', 2)
 ->model(Post::class);
 
