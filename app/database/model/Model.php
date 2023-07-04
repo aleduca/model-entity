@@ -53,11 +53,11 @@ abstract class Model
     {
         try {
             $connection = Connection::getConnection();
-            [$select, $where,$order,$limit,$offset] = $this->query->crateQuery([
-                'select', 'where', 'order', 'limit', 'offset',
+            [$select, $where] = $this->query->crateQuery([
+                'select', 'where',
             ]);
             $select = $select ?? '*';
-            $query = "select {$select} from {$this->table}{$where}{$order}{$limit}{$offset}";
+            $query = "select {$select} from {$this->table}{$where}";
             $prepare = $connection->prepare($query);
             $prepare->execute($this->query->get('binds'));
 

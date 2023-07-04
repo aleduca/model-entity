@@ -15,24 +15,17 @@ require '../vendor/autoload.php';
 $query = new Query;
 $query->select('id,firstName,lastName')
 ->limit(10)
-->where('id', '>', 2)
-->paginate(Post::class);
+->where('id', '=', 2)
+->model(Post::class);
 
 
-$posts = $query->modelInstance->execute($query)->all()->makeRelationsWith(
+$posts = $query->modelInstance->execute($query)->find()->makeRelationsWith(
     [User::class, RelationshipBelongsTo::class, 'author'],
     [Category::class, RelationshipBelongsTo::class, 'category'],
     [Comment::class, RelationshipHasMany::class, 'comments'],
 );
 
-// $posts = $query->modelInstance->execute($query)->all()->get();
-
-// $posts = $query->modelInstance->count($query)->total;
-
-// $users = $query->modelInstance->execute($query)->makeRelationsWith(
-//     [Comment::class, RelationshipHasMany::class, 'comments'],
+// var_dump(
+//     $query->paginate->createLinks(5)
 // );
-var_dump(
-    $query->paginate->createLinks(5)
-);
 var_dump($posts);
