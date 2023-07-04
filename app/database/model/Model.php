@@ -32,13 +32,13 @@ abstract class Model
     {
         try {
             $connection = Connection::getConnection();
-            [$select, $where,$order,$limit,$offset,$binds] = $this->query->crateQuery([
-                'select', 'where', 'order', 'limit', 'offset', 'binds',
+            [$select, $where,$order,$limit,$offset] = $this->query->crateQuery([
+                'select', 'where', 'order', 'limit', 'offset',
             ]);
             $select = $select ?? '*';
             $query = "select {$select} from {$this->table}{$where}{$order}{$limit}{$offset}";
             $prepare = $connection->prepare($query);
-            $prepare->execute($binds);
+            $prepare->execute($this->query->get('binds'));
 
             return $prepare->fetchAll(PDO::FETCH_CLASS, $this->getEntity());
         } catch (\PDOException $th) {
@@ -47,14 +47,15 @@ abstract class Model
     }
 
 
-    public function count(Query $query)
+    public function count(?Query $query = null)
     {
         try {
+            $this->query = ($this->query) ?: $query;
             $connection = Connection::getConnection();
-            [$where,$binds] = $query->crateQuery(['where', 'binds']);
-            $query = "select count(*) as total from {$this->table}{$where}";
-            $prepare = $connection->prepare($query);
-            $prepare->execute($binds);
+            [$where] = $this->query->crateQuery(['where']);
+            $sql = "select count(*) as total from {$this->table}{$where}";
+            $prepare = $connection->prepare($sql);
+            $prepare->execute($this->query->get('binds'));
 
             return $prepare->fetchObject($this->getEntity());
         } catch (\PDOException $th) {

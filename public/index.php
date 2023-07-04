@@ -2,6 +2,7 @@
 
 use app\database\library\Query;
 use app\database\model\Comment;
+use app\database\model\Post;
 use app\database\model\User;
 use app\database\relations\RelationshipBelongsTo;
 use app\database\relations\RelationshipHasMany;
@@ -13,20 +14,22 @@ require '../vendor/autoload.php';
 $query = new Query;
 $query->select('id,firstName,lastName')
 ->limit(10)
-->where('id', '>', 20)
+->where('id', '>', 30)
 ->order('id desc')
-->paginate(User::class);
+->paginate(Post::class);
 
 
-// $posts = $query->modelInstance->execute($query)->makeRelationsWith(
-//     [User::class, RelationshipBelongsTo::class, 'author'],
-//     [Comment::class, RelationshipHasMany::class, 'comments'],
-// );
-
-$users = $query->modelInstance->execute($query)->makeRelationsWith(
+$posts = $query->modelInstance->execute($query)->makeRelationsWith(
+    [User::class, RelationshipBelongsTo::class, 'author'],
     [Comment::class, RelationshipHasMany::class, 'comments'],
 );
+
+// $posts = $query->modelInstance->count($query)->total;
+
+// $users = $query->modelInstance->execute($query)->makeRelationsWith(
+//     [Comment::class, RelationshipHasMany::class, 'comments'],
+// );
 var_dump(
-    $query->paginate->createLinks(3)
+    $query->paginate->createLinks(5)
 );
-var_dump($users);
+var_dump($posts);

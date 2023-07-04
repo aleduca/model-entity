@@ -78,47 +78,41 @@ class Query
 
     private function transform(string $field)
     {
+        $data = [];
         switch ($field) {
             case 'select':
                 if (isset($this->data[$field]) && is_array($this->data[$field])) {
-                    $this->data[$field] = rtrim(implode(',', $this->data[$field]));
+                    $data[$field] = rtrim(implode(',', $this->data[$field]));
                 }
 
                 break;
             case 'where':
                 if (isset($this->data[$field]) && is_array($this->data[$field])) {
-                    $this->data[$field] = ' where ' . implode(' ', $this->data[$field]);
+                    $data[$field] = ' where ' . implode(' ', $this->data[$field]);
                 }
 
                 break;
             case 'limit':
                 if (isset($this->data[$field])) {
-                    $this->data[$field] = ' limit ' . $this->data[$field];
+                    $data[$field] = ' limit ' . $this->data[$field];
                 }
 
                 break;
             case 'offset':
                 if (isset($this->data[$field])) {
-                    $this->data[$field] = ' offset ' . $this->data[$field];
+                    $data[$field] = ' offset ' . $this->data[$field];
                 }
 
                 break;
             case 'order':
                 if (isset($this->data[$field])) {
-                    $this->data[$field] = ' order by ' . $this->data[$field];
-                }
-
-                break;
-
-            case 'binds':
-                if (!isset($this->data[$field])) {
-                    $this->data[$field] = [];
+                    $data[$field] = ' order by ' . $this->data[$field];
                 }
 
                 break;
         }
 
-        return $this->get($field);
+        return $data[$field] ?? null;
     }
 
     public function get(string $field)
