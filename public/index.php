@@ -1,6 +1,7 @@
 <?php
 
 use app\database\library\Query;
+use app\database\model\Category;
 use app\database\model\Comment;
 use app\database\model\Post;
 use app\database\model\User;
@@ -14,15 +15,17 @@ require '../vendor/autoload.php';
 $query = new Query;
 $query->select('id,firstName,lastName')
 ->limit(10)
-->where('id', '>', 30)
-->order('id desc')
+->where('id', '>', 2)
 ->paginate(Post::class);
 
 
-$posts = $query->modelInstance->execute($query)->makeRelationsWith(
+$posts = $query->modelInstance->execute($query)->all()->makeRelationsWith(
     [User::class, RelationshipBelongsTo::class, 'author'],
+    [Category::class, RelationshipBelongsTo::class, 'category'],
     [Comment::class, RelationshipHasMany::class, 'comments'],
 );
+
+// $posts = $query->modelInstance->execute($query)->all()->get();
 
 // $posts = $query->modelInstance->count($query)->total;
 

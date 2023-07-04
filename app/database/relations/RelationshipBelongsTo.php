@@ -2,13 +2,14 @@
 
 namespace app\database\relations;
 
+use app\database\entity\Entity;
 use app\database\interfaces\RelationshipInterface;
 use app\database\library\Helpers;
 use Exception;
 
 class RelationshipBelongsTo implements RelationshipInterface
 {
-    public function createWith(string $class, string $foreignClass, string $withProperty, array $results):object
+    public function createWith(string $class, string $foreignClass, string $withProperty, array|Entity $results):object
     {
         if (!class_exists($foreignClass)) {
             throw new Exception("Model {$foreignClass} does not exist");
@@ -17,18 +18,28 @@ class RelationshipBelongsTo implements RelationshipInterface
         $classShortName = Helpers::getClassShortName($foreignClass);
         $foreignKey = strtolower($classShortName) . '_id';
 
-        $ids = array_map(function ($data) use ($foreignKey) {
-            return $data->$foreignKey;
-        }, $results);
+        if (is_array($results)) {
+            $ids = array_map(function ($data) use ($foreignKey) {
+                return $data->$foreignKey;
+            }, $results);
+        }
+
+        if ($results instanceof Entity) {
+            $ids = $results->$foreignKey;
+        }
 
         $relatedWith = new $foreignClass;
-        $resultsFromRelated = $relatedWith->relatedWith(array_unique($ids));
+        $resultsFromRelated = $relatedWith->relatedWith(is_array($ids) ? array_unique($ids) : $ids);
 
 
-        foreach ($results as $data) {
-            foreach ($resultsFromRelated as $dateFromRelated) {
-                if ($data->$foreignKey === $dateFromRelated->id) {
-                    $data->$withProperty = $dateFromRelated;
+        if ($results instanceof Entity) {
+            $results->$withProperty = $resultsFromRelated[0];
+        } else {
+            foreach ($results as $data) {
+                foreach ($resultsFromRelated as $dateFromRelated) {
+                    if ($data->$foreignKey === $dateFromRelated->id) {
+                        $data->$withProperty = $dateFromRelated;
+                    }
                 }
             }
         }

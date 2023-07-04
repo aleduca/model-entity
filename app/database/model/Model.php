@@ -15,6 +15,7 @@ abstract class Model
 {
     protected string $table;
     protected ?Query $query = null;
+    protected array|Entity $results;
 
     private function getEntity()
     {
@@ -40,7 +41,29 @@ abstract class Model
             $prepare = $connection->prepare($query);
             $prepare->execute($this->query->get('binds'));
 
-            return $prepare->fetchAll(PDO::FETCH_CLASS, $this->getEntity());
+            $this->results = $prepare->fetchAll(PDO::FETCH_CLASS, $this->getEntity());
+
+            return $this;
+        } catch (\PDOException $th) {
+            var_dump($th->getMessage());
+        }
+    }
+
+    public function find()
+    {
+        try {
+            $connection = Connection::getConnection();
+            [$select, $where,$order,$limit,$offset] = $this->query->crateQuery([
+                'select', 'where', 'order', 'limit', 'offset',
+            ]);
+            $select = $select ?? '*';
+            $query = "select {$select} from {$this->table}{$where}{$order}{$limit}{$offset}";
+            $prepare = $connection->prepare($query);
+            $prepare->execute($this->query->get('binds'));
+
+            $this->results = $prepare->fetchObject($this->getEntity());
+
+            return $this;
         } catch (\PDOException $th) {
             var_dump($th->getMessage());
         }
@@ -86,7 +109,7 @@ abstract class Model
         }
     }
 
-    private function relation(string $class, string $relation, string $property, array $results)
+    private function relation(string $class, string $relation, string $property, array|Entity $results)
     {
         if (!class_exists($class)) {
             throw new Exception("Model {$class} does not exist");
@@ -112,14 +135,13 @@ abstract class Model
     public function makeRelationsWith(...$relations)
     {
         $relationsCreated = [];
-        $results = $this->all();
         foreach ($relations as $relationArray) {
             if (count($relationArray) !== 3) {
                 throw new Exception('To make relations, yout need to give exactly 3 parameters to relations methods');
             }
             [$class,$relation,$property] = $relationArray;
 
-            $relationsCreated[] = $this->relation($class, $relation, $property, $results);
+            $relationsCreated[] = $this->relation($class, $relation, $property, $this->results);
         }
 
         if (count($relationsCreated) == 1) {
@@ -147,6 +169,13 @@ abstract class Model
         return $relation1->items;
     }
 
+    public function get()
+    {
+        if ($this->results) {
+            return $this->results;
+        }
+    }
+
     // public function belongsTo(string $model, ?string $property = null)
     // {
     //     return RelationshipBelongsTo::createWith(
@@ -156,10 +185,15 @@ abstract class Model
     //     );
     // }
 
-    public function relatedWith(array $ids, string $field = 'id')
+    public function relatedWith(array|int $ids, string $field = 'id')
     {
         $connection = Connection::getConnection();
-        $query = "select * from {$this->table} where {$field} in (" . implode(',', $ids) . ')';
+
+        if (is_array($ids)) {
+            $ids = implode(',', $ids);
+        }
+
+        $query = "select * from {$this->table} where {$field} in (" . $ids . ')';
         $stmt = $connection->query($query);
 
         var_dump('related with executed');
